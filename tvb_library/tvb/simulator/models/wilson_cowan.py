@@ -69,18 +69,16 @@ def _numba_dfun(
     x_i = alpha_i[0] * (
         c_ie[0] * y[0] - c_ii[0] * y[1] + Q[0] - theta_i[0] + lc[0] + lc[1]
     )
-    if shift_sigmoid:
-        s_e = c_e[0] * (
-            1.0 / (1.0 + numpy.exp(-a_e[0] * (x_e - b_e[0])))
-            - 1.0 / (1.0 + numpy.exp(-a_e[0] * -b_e[0]))
-        )
-        s_i = c_i[0] * (
-            1.0 / (1.0 + numpy.exp(-a_i[0] * (x_i - b_i[0])))
-            - 1.0 / (1.0 + numpy.exp(-a_i[0] * -b_i[0]))
-        )
-    else:
-        s_e = c_e[0] / (1.0 + numpy.exp(-a_e[0] * (x_e - b_e[0])))
-        s_i = c_i[0] / (1.0 + numpy.exp(-a_i[0] * (x_i - b_i[0])))
+
+    s_e = c_e[0] * (
+        1.0 / (1.0 + numpy.exp(-a_e[0] * (x_e - b_e[0])))
+        - shift_sigmoid * 1.0 / (1.0 + numpy.exp(-a_e[0] * -b_e[0]))
+    )
+    s_i = c_i[0] * (
+        1.0 / (1.0 + numpy.exp(-a_i[0] * (x_i - b_i[0])))
+        - shift_sigmoid * 1.0 / (1.0 + numpy.exp(-a_i[0] * -b_i[0]))
+    )
+
     ydot[0] = (-y[0] + (k_e[0] - r_e[0] * y[0]) * s_e) / tau_e[0]
     ydot[1] = (-y[1] + (k_i[0] - r_i[0] * y[1]) * s_i) / tau_i[0]
 
