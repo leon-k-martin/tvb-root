@@ -33,16 +33,51 @@ from tvb.basic.neotraits.api import NArray, Final, List, Range
 from numba import guvectorize, float64
 
 
-@guvectorize([(float64[:],) * 27], '(n),(m),(o)' + ',()'*23 + '->(n)', nopython=True)
-def _numba_dfun(y, c, lc, c_ee, c_ei, c_ie, c_ii, tau_e, tau_i, a_e, b_e, c_e, theta_e, a_i, b_i, theta_i, c_i,
-                r_e, r_i, k_e, k_i, P, Q, alpha_e, alpha_i, shift_sigmoid, ydot):
-    x_e = alpha_e[0] * (c_ee[0] * y[0] - c_ei[0] * y[1] + P[0]  - theta_e[0] +  c[0] + lc[0] + lc[1])
-    x_i = alpha_i[0] * (c_ie[0] * y[0] - c_ii[0] * y[1] + Q[0]  - theta_i[0] + lc[0] + lc[1])
+@guvectorize([(float64[:],) * 27], "(n),(m),(o)" + ",()" * 23 + "->(n)", nopython=True)
+def _numba_dfun(
+    y,
+    c,
+    lc,
+    c_ee,
+    c_ei,
+    c_ie,
+    c_ii,
+    tau_e,
+    tau_i,
+    a_e,
+    b_e,
+    c_e,
+    theta_e,
+    a_i,
+    b_i,
+    theta_i,
+    c_i,
+    r_e,
+    r_i,
+    k_e,
+    k_i,
+    P,
+    Q,
+    alpha_e,
+    alpha_i,
+    shift_sigmoid,
+    ydot,
+):
+    x_e = alpha_e[0] * (
+        c_ee[0] * y[0] - c_ei[0] * y[1] + P[0] - theta_e[0] + c[0] + lc[0] + lc[1]
+    )
+    x_i = alpha_i[0] * (
+        c_ie[0] * y[0] - c_ii[0] * y[1] + Q[0] - theta_i[0] + lc[0] + lc[1]
+    )
     if shift_sigmoid:
-        s_e = c_e[0] * (1.0 / (1.0 + numpy.exp(-a_e[0] * (x_e - b_e[0]))) - 1.0
-                        / (1.0 + numpy.exp(-a_e[0] * -b_e[0])))
-        s_i = c_i[0] * (1.0 / (1.0 + numpy.exp(-a_i[0] * (x_i - b_i[0]))) - 1.0
-                        / (1.0 + numpy.exp(-a_i[0] * -b_i[0])))
+        s_e = c_e[0] * (
+            1.0 / (1.0 + numpy.exp(-a_e[0] * (x_e - b_e[0])))
+            - 1.0 / (1.0 + numpy.exp(-a_e[0] * -b_e[0]))
+        )
+        s_i = c_i[0] * (
+            1.0 / (1.0 + numpy.exp(-a_i[0] * (x_i - b_i[0])))
+            - 1.0 / (1.0 + numpy.exp(-a_i[0] * -b_i[0]))
+        )
     else:
         s_e = c_e[0] / (1.0 + numpy.exp(-a_e[0] * (x_e - b_e[0])))
         s_i = c_i[0] / (1.0 + numpy.exp(-a_i[0] * (x_i - b_i[0])))
@@ -208,157 +243,179 @@ class WilsonCowan(ModelNumbaDfun):
         label=":math:`c_{ee}`",
         default=numpy.array([12.0]),
         domain=Range(lo=11.0, hi=16.0, step=0.01),
-        doc="""Excitatory to excitatory  coupling coefficient""")
+        doc="""Excitatory to excitatory  coupling coefficient""",
+    )
 
     c_ei = NArray(
         label=":math:`c_{ei}`",
         default=numpy.array([4.0]),
         domain=Range(lo=2.0, hi=15.0, step=0.01),
-        doc="""Inhibitory to excitatory coupling coefficient""")
+        doc="""Inhibitory to excitatory coupling coefficient""",
+    )
 
     c_ie = NArray(
         label=":math:`c_{ie}`",
         default=numpy.array([13.0]),
         domain=Range(lo=2.0, hi=22.0, step=0.01),
-        doc="""Excitatory to inhibitory coupling coefficient.""")
+        doc="""Excitatory to inhibitory coupling coefficient.""",
+    )
 
     c_ii = NArray(
         label=":math:`c_{ii}`",
         default=numpy.array([11.0]),
         domain=Range(lo=2.0, hi=15.0, step=0.01),
-        doc="""Inhibitory to inhibitory coupling coefficient.""")
+        doc="""Inhibitory to inhibitory coupling coefficient.""",
+    )
 
     tau_e = NArray(
         label=r":math:`\tau_e`",
         default=numpy.array([10.0]),
         domain=Range(lo=0.0, hi=150.0, step=0.01),
-        doc="""Excitatory population, membrane time-constant [ms]""")
+        doc="""Excitatory population, membrane time-constant [ms]""",
+    )
 
     tau_i = NArray(
         label=r":math:`\tau_i`",
         default=numpy.array([10.0]),
         domain=Range(lo=0.0, hi=150.0, step=0.01),
-        doc="""Inhibitory population, membrane time-constant [ms]""")
+        doc="""Inhibitory population, membrane time-constant [ms]""",
+    )
 
     a_e = NArray(
         label=":math:`a_e`",
         default=numpy.array([1.2]),
         domain=Range(lo=0.0, hi=1.4, step=0.01),
-        doc="""The slope parameter for the excitatory response function""")
+        doc="""The slope parameter for the excitatory response function""",
+    )
 
     b_e = NArray(
         label=":math:`b_e`",
         default=numpy.array([2.8]),
         domain=Range(lo=1.4, hi=6.0, step=0.01),
-        doc="""Position of the maximum slope of the excitatory sigmoid function""")
+        doc="""Position of the maximum slope of the excitatory sigmoid function""",
+    )
 
     c_e = NArray(
         label=":math:`c_e`",
         default=numpy.array([1.0]),
         domain=Range(lo=1.0, hi=20.0, step=1.0),
-        doc="""The amplitude parameter for the excitatory response function""")
+        doc="""The amplitude parameter for the excitatory response function""",
+    )
 
     theta_e = NArray(
         label=r":math:`\theta_e`",
         default=numpy.array([0.0]),
-        domain=Range(lo=0.0, hi=60., step=0.01),
-        doc="""Excitatory threshold""")
+        domain=Range(lo=0.0, hi=60.0, step=0.01),
+        doc="""Excitatory threshold""",
+    )
 
     a_i = NArray(
         label=":math:`a_i`",
         default=numpy.array([1.0]),
         domain=Range(lo=0.0, hi=2.0, step=0.01),
-        doc="""The slope parameter for the inhibitory response function""")
+        doc="""The slope parameter for the inhibitory response function""",
+    )
 
     b_i = NArray(
         label=":math:`b_i`",
         default=numpy.array([4.0]),
         domain=Range(lo=2.0, hi=6.0, step=0.01),
         doc="""Position of the maximum slope of a sigmoid function [in
-        threshold units]""")
+        threshold units]""",
+    )
 
     theta_i = NArray(
         label=r":math:`\theta_i`",
         default=numpy.array([0.0]),
         domain=Range(lo=0.0, hi=60.0, step=0.01),
-        doc="""Inhibitory threshold""")
+        doc="""Inhibitory threshold""",
+    )
 
     c_i = NArray(
         label=":math:`c_i`",
         default=numpy.array([1.0]),
         domain=Range(lo=1.0, hi=20.0, step=1.0),
-        doc="""The amplitude parameter for the inhibitory response function""")
+        doc="""The amplitude parameter for the inhibitory response function""",
+    )
 
     r_e = NArray(
         label=":math:`r_e`",
         default=numpy.array([1.0]),
         domain=Range(lo=0.5, hi=2.0, step=0.01),
-        doc="""Excitatory refractory period""")
+        doc="""Excitatory refractory period""",
+    )
 
     r_i = NArray(
         label=":math:`r_i`",
         default=numpy.array([1.0]),
         domain=Range(lo=0.5, hi=2.0, step=0.01),
-        doc="""Inhibitory refractory period""")
+        doc="""Inhibitory refractory period""",
+    )
 
     k_e = NArray(
         label=":math:`k_e`",
         default=numpy.array([1.0]),
         domain=Range(lo=0.5, hi=2.0, step=0.01),
-        doc="""Maximum value of the excitatory response function""")
+        doc="""Maximum value of the excitatory response function""",
+    )
 
     k_i = NArray(
         label=":math:`k_i`",
         default=numpy.array([1.0]),
         domain=Range(lo=0.0, hi=2.0, step=0.01),
-        doc="""Maximum value of the inhibitory response function""")
+        doc="""Maximum value of the inhibitory response function""",
+    )
 
     P = NArray(
         label=":math:`P`",
         default=numpy.array([0.0]),
         domain=Range(lo=0.0, hi=20.0, step=0.01),
         doc="""External stimulus to the excitatory population.
-        Constant intensity.Entry point for coupling.""")
+        Constant intensity.Entry point for coupling.""",
+    )
 
     Q = NArray(
         label=":math:`Q`",
         default=numpy.array([0.0]),
         domain=Range(lo=0.0, hi=20.0, step=0.01),
         doc="""External stimulus to the inhibitory population.
-        Constant intensity.Entry point for coupling.""")
+        Constant intensity.Entry point for coupling.""",
+    )
 
     alpha_e = NArray(
         label=r":math:`\alpha_e`",
         default=numpy.array([1.0]),
         domain=Range(lo=0.0, hi=20.0, step=0.01),
         doc="""External stimulus to the excitatory population.
-        Constant intensity.Entry point for coupling.""")
+        Constant intensity.Entry point for coupling.""",
+    )
 
     alpha_i = NArray(
         label=r":math:`\alpha_i`",
         default=numpy.array([1.0]),
         domain=Range(lo=0.0, hi=20.0, step=0.01),
         doc="""External stimulus to the inhibitory population.
-        Constant intensity.Entry point for coupling.""")
+        Constant intensity.Entry point for coupling.""",
+    )
 
     shift_sigmoid = NArray(
-        dtype= numpy.bool_,
+        dtype=numpy.bool_,
         label=r":math:`shift sigmoid`",
         default=numpy.array([True]),
         doc="""In order to have resting state (E=0 and I=0) in absence of external input,
         the logistic curve are translated downward S(0)=0""",
-        )
+    )
 
     # Used for phase-plane axis ranges and to bound random initial() conditions.
     state_variable_range = Final(
         label="State Variable ranges [lo, hi]",
-        default={"E": numpy.array([0.0, 1.0]),
-                 "I": numpy.array([0.0, 1.0])},
+        default={"E": numpy.array([0.0, 1.0]), "I": numpy.array([0.0, 1.0])},
         doc="""The values for each state-variable should be set to encompass
         the expected dynamic range of that state-variable for the current
         parameters, it is used as a mechanism for bounding random inital
         conditions when the simulation isn't started from an explicit history,
-        it is also provides the default range of phase-plane plots.""")
+        it is also provides the default range of phase-plane plots.""",
+    )
 
     variables_of_interest = List(
         of=str,
@@ -368,9 +425,10 @@ class WilsonCowan(ModelNumbaDfun):
         doc="""This represents the default state-variables of this Model to be
                monitored. It can be overridden for each Monitor if desired. The
                corresponding state-variable indices for this model are :math:`E = 0`
-               and :math:`I = 1`.""")
+               and :math:`I = 1`.""",
+    )
 
-    state_variables = 'E I'.split()
+    state_variables = "E I".split()
     _nvar = 2
     cvar = numpy.array([0, 1], dtype=numpy.int32)
 
@@ -394,17 +452,20 @@ class WilsonCowan(ModelNumbaDfun):
         lc_0 = local_coupling * E
         lc_1 = local_coupling * I
 
-        x_e = self.alpha_e * (self.c_ee * E - self.c_ei * I + self.P  - self.theta_e +  c_0 + lc_0 + lc_1)
-        x_i = self.alpha_i * (self.c_ie * E - self.c_ii * I + self.Q  - self.theta_i + lc_0 + lc_1)
+        x_e = self.alpha_e * (
+            self.c_ee * E - self.c_ei * I + self.P - self.theta_e + c_0 + lc_0 + lc_1
+        )
+        x_i = self.alpha_i * (
+            self.c_ie * E - self.c_ii * I + self.Q - self.theta_i + lc_0 + lc_1
+        )
 
-        if self.shift_sigmoid:
-            s_e = self.c_e * (1.0 / (1.0 + numpy.exp(-self.a_e * (x_e - self.b_e))) - 1.0
-                              / (1.0 + numpy.exp(-self.a_e * -self.b_e)))
-            s_i = self.c_i * (1.0 / (1.0 + numpy.exp(-self.a_i * (x_i - self.b_i))) - 1.0
-                              / (1.0 + numpy.exp(-self.a_i * -self.b_i)))
-        else:
-            s_e = self.c_e / (1.0 + numpy.exp(-self.a_e * (x_e - self.b_e)))
-            s_i = self.c_i / (1.0 + numpy.exp(-self.a_i * (x_i - self.b_i)))
+        s_e = self.c_e / (
+            1.0 + numpy.exp(-self.a_e * (x_e - self.b_e))
+        ) - self.shift_sigmoid * (1.0 / (1.0 + numpy.exp(-self.a_e * -self.b_e)))
+
+        s_i = self.c_i / (
+            1.0 + numpy.exp(-self.a_i * (x_i - self.b_i))
+        ) - self.shift_sigmoid * (1.0 / (1.0 + numpy.exp(-self.a_i * -self.b_i)))
 
         derivative[0] = (-E + (self.k_e - self.r_e * E) * s_e) / self.tau_e
         derivative[1] = (-I + (self.k_i - self.r_i * I) * s_i) / self.tau_i
@@ -421,10 +482,39 @@ class WilsonCowan(ModelNumbaDfun):
         """
         x_ = state_variables.reshape(state_variables.shape[:-1]).T
         c_ = coupling.reshape(coupling.shape[:-1]).T
-        local_coupling = numpy.array([local_coupling * state_variables[0, :], local_coupling * state_variables[1, :]])
+        local_coupling = numpy.array(
+            [
+                local_coupling * state_variables[0, :],
+                local_coupling * state_variables[1, :],
+            ]
+        )
         local_coupling_ = local_coupling.reshape(local_coupling.shape[:-1]).T
-        deriv = _numba_dfun(x_, c_, local_coupling_,
-                            self.c_ee, self.c_ei, self.c_ie, self.c_ii, self.tau_e, self.tau_i, self.a_e, self.b_e,
-                            self.c_e, self.theta_e, self.a_i, self.b_i, self.theta_i, self.c_i, self.r_e, self.r_i,
-                            self.k_e, self.k_i, self.P, self.Q, self.alpha_e, self.alpha_i, self.shift_sigmoid)
+        deriv = _numba_dfun(
+            x_,
+            c_,
+            local_coupling_,
+            self.c_ee,
+            self.c_ei,
+            self.c_ie,
+            self.c_ii,
+            self.tau_e,
+            self.tau_i,
+            self.a_e,
+            self.b_e,
+            self.c_e,
+            self.theta_e,
+            self.a_i,
+            self.b_i,
+            self.theta_i,
+            self.c_i,
+            self.r_e,
+            self.r_i,
+            self.k_e,
+            self.k_i,
+            self.P,
+            self.Q,
+            self.alpha_e,
+            self.alpha_i,
+            self.shift_sigmoid,
+        )
         return deriv.T[..., numpy.newaxis]
